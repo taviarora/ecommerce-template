@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My E-Commerce Website</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>My E-Commerce Store</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="cart.html">Cart</a></li>
+        <li><a href="login.html">Login</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section id="product-list"></section>
+
+  <footer>
+    <p>&copy; 2025 My E-Commerce Website</p>
+  </footer>
+
+  <!-- Load your scripts here -->
+  <script type="module" src="./assets/js/main.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+  (function(){
+    emailjs.init("qcbXaXrWGMaIRt6_o"); // Replace with your EmailJS user ID
+  })();
+</script>
+
+
+</body>
+</html>
