@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+
+<body>
+  <header>
+    <h1>Your Shopping Cart</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="cart.html">Cart</a></li>
+        <li><a href="login.html">Login</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <header>
+    <h1>Review Your Order</h1>
+  </header>
+  <main>
+    <div id="cart-container"></div>
+
+    <div id="summary">
+      <p>Subtotal: <span id="subtotal">$0.00</span></p>
+      <p>Tax (5%): <span id="tax">$0.00</span></p>
+      <p><strong>Total: <span id="total">$0.00</span></strong></p>
+
+      <label for="payment-method">Choose Payment Method:</label>
+      <select id="payment-method">
+        <option value="cod">Cash on Delivery</option>
+        <option value="card">Credit/Debit Card</option>
+      </select>
+
+      <button id="checkout-btn">Place Order</button>
+    </div>
+  </main>
+
+  <script type="module" src="assets/js/checkout.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    (function () {
+      emailjs.init("qcbXaXrWGMaIRt6_o"); // Replace with your EmailJS user ID
+    })();
+  </script>
+</body>
+
+</html>

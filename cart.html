@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cart</title>
+  <title>Your Cart</title>
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
   <header>
-    <h1>Your Cart</h1>
+    <h1>Your Shopping Cart</h1>
     <nav>
       <ul>
         <li><a href="index.html">Home</a></li>
@@ -18,20 +18,25 @@
     </nav>
   </header>
 
-  <section id="cart-items">
-    <!-- existing cart items here -->
-  </section>
+  <main>
+    <section id="cart-items" class="cart-section">
+      <!-- Cart items will be dynamically injected here -->
+    </section>
 
-  <button id="checkout-btn">Proceed to Checkout</button>
+    <section id="cart-summary" class="summary-section">
+      <p>Subtotal: <span id="subtotal">₹0.00</span></p>
+      <p>Tax (5%): <span id="tax">₹0.00</span></p>
+      <p><strong>Total: <span id="total">₹0.00</span></strong></p>
 
+      <button id="checkout-btn">Proceed to Checkout</button>
+    </section>
+  </main>
 
   <footer>
     <p>&copy; 2025 My E-Commerce Website</p>
   </footer>
 
-  <!-- Load your scripts here -->
+  <!-- Scripts -->
   <script type="module" src="./assets/js/cart.js"></script>
-  <script type="module" src="./assets/js/checkout.js"></script>
-
 </body>
 </html>

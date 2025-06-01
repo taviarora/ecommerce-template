@@ -1,17 +1,54 @@
-﻿// assets/js/checkout.js
+﻿import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { auth, db } from './firebase-config.js';
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import {
   collection,
   getDocs,
-  addDoc,
   deleteDoc,
   doc,
+  addDoc,
   Timestamp
 } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
+
 document.addEventListener('DOMContentLoaded', () => {
+  const cartContainer = document.getElementById('cart-container');
+  const subtotalElem = document.getElementById('subtotal');
+  const taxElem = document.getElementById('tax');
+  const totalElem = document.getElementById('total');
+  const paymentMethod = document.getElementById('payment-method');
   const checkoutBtn = document.getElementById('checkout-btn');
+
+  if (!checkoutBtn || !cartContainer || !subtotalElem) {
+    console.error('DOM elements not found. Check your HTML.');
+    return;
+  }
+
+  function formatCurrency(num) {
+    // return `₹${num.toFixed(2)}`;
+    return `₹${num}`;
+
+  }
+
+
+  function displayCart(items, total) {
+    cartContainer.innerHTML = '';
+    items.forEach(item => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'cart-item';
+      itemDiv.innerHTML = `
+        <p><strong>${item.name}</strong> × ${item.quantity} — ${formatCurrency(item.price)} each</p>
+        <p>Total: ${formatCurrency(item.price * item.quantity)}</p>
+      `;
+      cartContainer.appendChild(itemDiv);
+    });
+
+    const tax = total * 0.05;
+    const finalTotal = total + tax;
+
+    subtotalElem.innerText = formatCurrency(total);
+    taxElem.innerText = formatCurrency(tax);
+    totalElem.innerText = formatCurrency(finalTotal);
+  }
 
   onAuthStateChanged(auth, (user) => {
     if (!user) {
@@ -21,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     checkoutBtn.addEventListener('click', async () => {
-      // 1. Fetch cart items
       const cartRef = collection(db, 'users', user.uid, 'cart');
       const snapshot = await getDocs(cartRef);
       if (snapshot.empty) {
@@ -29,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const items = [];
-      let total = 0;
+      let subtotal = 0;
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
         const price = data.price ?? data.Price;
@@ -39,31 +75,115 @@ document.addEventListener('DOMContentLoaded', () => {
           price,
           quantity: data.quantity
         });
-        total += price * data.quantity;
+        subtotal += price * data.quantity;
       });
 
-      // 2. Create order document
+      displayCart(items, subtotal); // Update UI again if needed
+
+      const tax = subtotal * 0.05;
+      const total = subtotal + tax;
+      const payment = paymentMethod.value;
+
       try {
         await addDoc(collection(db, 'orders'), {
           userId: user.uid,
           items,
+          subtotal,
+          tax,
           total,
+          paymentMethod: payment,
           createdAt: Timestamp.now()
         });
 
-        // 3. Clear the cart
-        const deletes = snapshot.docs.map(docSnap => {
-          return deleteDoc(doc(db, 'users', user.uid, 'cart', docSnap.id));
-        });
+        const deletes = snapshot.docs.map(docSnap =>
+          deleteDoc(doc(db, 'users', user.uid, 'cart', docSnap.id))
+        );
+
+        // Build order summary using existing variable names
+        const orderSummary = items.map(item =>
+          `${item.name} × ${item.quantity} — ₹${item.price * item.quantity}`
+        ).join('\n');
+
+        const paymentInfo = `Subtotal: ₹${subtotal}\nTax: ₹${tax}\nTotal: ₹${total}\nPayment Method: ${payment}`;
+
+        // 1. Send email to user
+        const userEmailData = {
+          user_email: "malikaarora2202@gmail.com", // change to user.email in production
+          product_name: "Order Confirmation:\n" + orderSummary,
+          query: paymentInfo
+        };
+
+        console.log("Attempting to send user confirmation email with data:", userEmailData);
+
+        emailjs.send("service_jitwsrj", "template_8wpg95p", userEmailData)
+          .then((response) => {
+            console.log("✅ Confirmation email sent to user successfully.");
+            console.log("EmailJS response:", response.status, response.text);
+          })
+          .catch((err) => {
+            console.error("❌ Failed to send confirmation email to user.");
+            console.error("Error object:", err);
+            if (err?.status) console.error("Status code:", err.status);
+            if (err?.text) console.error("Error text:", err.text);
+            if (err?.stack) console.error("Stack trace:", err.stack);
+          });
+
+
+        // 2. Send email to store owner (e.g., your business email)
+        emailjs.send("service_jitwsrj", "template_8wpg95p", {
+          user_email: "malikaarora2202@gmail.com", // Replace with your actual store email
+          product_name: `New Order by ${user.email}:\n` + orderSummary,
+          query: paymentInfo
+        })
+          .then(() => console.log("Order alert email sent to owner."))
+          .catch((err) => console.error("Owner email send error:", err));
+
         await Promise.all(deletes);
 
-        alert('Order placed successfully! Thank you for shopping.');
-        // 4. Optionally redirect to a “Thank you” page
-        window.location.href = 'thankyou.html';
+
+        // window.location.href = 'thankyou.html';
       } catch (err) {
         console.error('Checkout error:', err);
         alert('There was a problem placing your order.');
       }
     });
+
+    // // Initial cart rendering
+    // (async () => {
+    //   const cartRef = collection(db, 'users', user.uid, 'cart');
+    //   const snapshot = await getDocs(cartRef);
+    //   const items = [];
+    //   let subtotal = 0;
+    //   snapshot.forEach(docSnap => {
+    //     const data = docSnap.data();
+    //     const price = Number(data.price ?? data.Price);
+    //     const quantity = Number(data.quantity);
+    //     items.push({
+    //       id: docSnap.id,
+    //       name: data.name,
+    //       price,
+    //       quantity
+    //     });
+    //     subtotal += price * quantity;
+    //   });
+
+    //   displayCart(items, subtotal);
+    // })();
+
+    (async () => {
+      const cartRef = collection(db, 'users', user.uid, 'cart');
+      const snapshot = await getDocs(cartRef);
+      const items = [];
+      let subtotal = 0;
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const price = Number(data.price ?? data.Price);
+        const quantity = Number(data.quantity);
+        items.push({ id: docSnap.id, name: data.name, price, quantity });
+        subtotal += price * quantity;
+      });
+      displayCart(items, subtotal); // Updates cart + ₹subtotal/tax/total
+    })();
+
   });
 });
